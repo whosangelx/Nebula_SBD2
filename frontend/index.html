@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula Stream</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- ESTILOS NEBULA THEME --- */
+        :root {
+            --bg-body: #0f0c29;
+            --bg-gradient: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --accent-color: #ff007f;
+            --accent-gradient: linear-gradient(45deg, #ff007f, #7928ca);
+            --text-white: #ffffff;
+            --text-gray: #a0a0a0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+        
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-white);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- MODAIS GERAIS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+        }
+        
+        #auth-screen { display: flex; background: var(--bg-body); z-index: 3000; }
+
+        .modal-box {
+            background: rgba(30, 30, 40, 0.95);
+            padding: 30px; border-radius: 20px;
+            width: 400px; text-align: center;
+            border: var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-box h3 { margin-bottom: 5px; font-size: 22px; color: white; }
+        .modal-box p { color: #aaa; font-size: 14px; margin-bottom: 10px; }
+
+        .modal-box input, .auth-box input {
+            width: 100%; padding: 12px;
+            background: rgba(0,0,0,0.4); border: 1px solid #444;
+            color: white; border-radius: 8px; outline: none; font-size: 14px;
+        }
+        .modal-box input:focus { border-color: var(--accent-color); }
+
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        
+        .btn-primary {
+            background: var(--accent-gradient); color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            flex-grow: 1; transition: 0.2s;
+        }
+        .btn-primary:hover { filter: brightness(1.2); }
+
+        .btn-secondary {
+            background: transparent; border: 1px solid #555; color: #ddd;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover { border-color: white; color: white; }
+        
+        .btn-danger {
+            background: rgba(220, 20, 60, 0.8); color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+            flex-grow: 1;
+        }
+        .btn-danger:hover { background: red; }
+
+        .auth-box { width: 350px; text-align: center; } 
+        .toggle-link { margin-top: 15px; color: #aaa; cursor: pointer; font-size: 13px; }
+        .toggle-link:hover { text-decoration: underline; color: white; }
+
+        .scroll-list {
+            max-height: 300px; overflow-y: auto; text-align: left;
+            border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px;
+        }
+        .list-item {
+            padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .list-item:hover { background: rgba(255,255,255,0.1); }
+        .btn-mini {
+            background: var(--accent-color); color: white; border: none;
+            padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;
+        }
+
+        /* --- APP LAYOUT --- */
+        #app-container { display: none; height: 100vh; grid-template-columns: 260px 1fr; grid-template-rows: 1fr 100px; }
+
+        .sidebar { background: var(--glass-bg); border-right: var(--glass-border); grid-row: 1 / 2; padding: 30px; display: flex; flex-direction: column; gap: 20px; }
+        .logo { font-size: 26px; font-weight: 800; color: white; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .menu-item { color: var(--text-gray); padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; border-radius: 12px; font-weight: 500; transition: 0.3s; }
+        .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.1); color: white; }
+        .menu-item.active { border-left: 4px solid var(--accent-color); }
+        
+        .playlist-section { margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; overflow-y: auto; flex-grow: 1; }
+        .playlist-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding: 0 5px; }
+        .btn-create-pl { cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
+        .btn-create-pl:hover { color: var(--accent-color); transform: scale(1.2); }
+        
+        .playlist-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: #ddd; font-size: 14px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .playlist-row:hover { background: rgba(255,255,255,0.05); color: white; }
+        .btn-delete-pl { opacity: 0; color: #ff4444; font-size: 12px; transition: 0.2s; }
+        .playlist-row:hover .btn-delete-pl { opacity: 1; }
+
+        .user-profile { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; display: flex; align-items: center; gap: 12px; font-size: 14px; color: white; cursor: pointer; }
+        .user-avatar { width: 35px; height: 35px; background: linear-gradient(45deg, #444, #666); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        .main-content { padding: 30px 40px; overflow-y: auto; position: relative; }
+        .search-box { background: rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 20px; width: 100%; display: flex; align-items: center; border: var(--glass-border); margin-bottom: 40px; }
+        .search-box input { background: transparent; border: none; color: white; width: 100%; margin-left: 10px; outline: none; font-size: 15px; }
+
+        .playlist-info-header { margin-bottom: 30px; display: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .playlist-info-header.active { display: block; }
+        .playlist-title-row { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .playlist-big-title { font-size: 40px; font-weight: bold; margin: 0; background: -webkit-linear-gradient(45deg, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        .btn-action-icon { cursor: pointer; font-size: 18px; color: #555; transition: 0.2s; }
+        .btn-action-icon:hover { color: white; }
+        .btn-add-music-hero { background: var(--accent-gradient); border: none; padding: 12px 25px; border-radius: 30px; color: white; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 5px 15px rgba(255,0,127,0.3); transition: 0.2s; }
+        .btn-add-music-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,0,127,0.5); }
+
+        .section-title { font-size: 24px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;}
+        .songs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
+        .card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; position: relative; border: 1px solid transparent; }
+        .card:hover { background: rgba(255,255,255,0.1); transform: translateY(-8px); border-color: rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .card h3 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+        .card p { font-size: 13px; color: #aaa; }
+
+        .fav-card-btn, .remove-card-btn { position: absolute; top: 25px; right: 25px; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; z-index: 10; cursor: pointer; }
+        .fav-card-btn { background: rgba(0,0,0,0.6); color: white; }
+        .remove-card-btn { background: rgba(255, 50, 50, 0.8); color: white; right: auto; left: 25px; }
+        .card:hover .fav-card-btn, .card:hover .remove-card-btn { opacity: 1; }
+        .fav-card-btn.active { opacity: 1; color: var(--accent-color); background: rgba(255,255,255,0.1); }
+
+        .player-bar { grid-column: 1 / 3; background: rgba(18,18,25,0.95); border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; backdrop-filter: blur(15px); z-index: 100; }
+        .now-playing { display: flex; align-items: center; gap: 15px; width: 30%; }
+        .now-playing img { width: 56px; height: 56px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .track-info div:first-child { font-weight: bold; font-size: 15px; }
+        .track-info div:last-child { font-size: 12px; color: #aaa; }
+        .player-controls { width: 40%; display: flex; justify-content: center; }
+        audio { width: 100%; height: 40px; filter: invert(1) hue-rotate(180deg) opacity(0.9); }
+        .player-extras { width: 30%; display: flex; justify-content: flex-end; align-items: center; }
+        .btn-player-add { color: #888; font-size: 20px; cursor: pointer; transition: 0.2s; opacity: 0.5; pointer-events: none; }
+        .btn-player-add:hover { color: var(--accent-color); transform: scale(1.1); }
+        .btn-player-add.active { opacity: 1; pointer-events: auto; }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. TELA DE LOGIN -->
+    <div id="auth-screen" class="modal-overlay" style="display: flex;">
+        <div class="modal-box auth-box">
+            <h2 id="auth-title">Login Nebula</h2>
+            <input type="email" id="auth-email" placeholder="Email">
+            <input type="password" id="auth-pass" placeholder="Senha">
+            <input type="text" id="auth-user" placeholder="Nome de Usuário" style="display: none;">
+            <button class="btn-primary" onclick="handleAuth()">Entrar</button>
+            <div class="toggle-link" onclick="toggleAuthMode()">Não tem conta? Crie uma agora</div>
+        </div>
+    </div>
+
+    <!-- 2. MODAL PROMPT -->
+    <div id="custom-prompt" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="prompt-title">Título</h3>
+            <input type="text" id="prompt-input" placeholder="...">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
+                <button class="btn-primary" id="prompt-confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MODAL CONFIRM -->
+    <div id="custom-confirm" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="confirm-title">Tem certeza?</h3>
+            <p id="confirm-msg">Essa ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
+                <button class="btn-danger" id="confirm-yes-btn">Sim, excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. MODAL ADICIONAR MÚSICA -->
+    <div id="modal-add-song" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Adicionar à Playlist</h3>
+            <p>Escolha uma música da biblioteca</p>
+            <div class="scroll-list" id="modal-song-list"></div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="fecharModais()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL SELECIONAR PLAYLIST -->
+    <div id="modal-select-playlist" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Salvar Música</h3>
+            <p>Adicionar <b id="song-to-add-name" style="color:white"></b> em:</p>
+            <div class="scroll-list" id="modal-playlist-select-list"></div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo"><i class="fas fa-bolt"></i> Nebula</div>
+            <div class="menu-item active" id="btn-descobrir" onclick="navegar('descobrir')"><i class="fas fa-compass"></i> Descobrir</div>
+            <div class="menu-item" id="btn-em-alta" onclick="navegar('em-alta')"><i class="fas fa-fire"></i> Em Alta</div>
+            <div class="menu-item" id="btn-albuns" onclick="navegar('albuns')"><i class="fas fa-record-vinyl"></i> Álbuns</div>
+            <div class="menu-item" id="btn-favoritos" onclick="navegar('favoritos')"><i class="fas fa-heart"></i> Favoritos</div>
+
+            <div class="playlist-section">
+                <div class="playlist-header">SUAS PLAYLISTS <i class="fas fa-plus-circle btn-create-pl" onclick="criarPlaylistPrompt()"></i></div>
+                <div id="playlist-list-container"></div>
+            </div>
+
+            <div class="user-profile" onclick="confirmarLogout()">
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
+                <div id="user-name-display">Usuário</div>
+                <i class="fas fa-sign-out-alt" style="margin-left: auto; color: #666;"></i>
+            </div>
+        </div>
+
+        <!-- CONTEÚDO -->
+        <div class="main-content">
+            <div class="search-box">
+                <i class="fas fa-search" style="color: #a0a0a0;"></i>
+                <input type="text" id="searchInput" placeholder="Buscar artista, música...">
+            </div>
+
+            <div id="playlist-header-area" class="playlist-info-header">
+                <div class="playlist-title-row">
+                    <h1 class="playlist-big-title" id="playlist-title-text">Minha Playlist</h1>
+                    <i class="fas fa-pencil-alt btn-action-icon" title="Renomear" onclick="editarNomePlaylistPrompt()"></i>
+                </div>
+                <p style="color: #aaa; font-size: 14px;">Playlist pessoal • Criada por você</p>
+                <button class="btn-add-music-hero" onclick="abrirModalMusicas()">+ Adicionar Músicas</button>
+            </div>
+
+            <h2 class="section-title" id="page-title">Descobrir</h2>
+            <div class="songs-grid" id="main-grid"></div>
+        </div>
+
+        <!-- PLAYER -->
+        <div class="player-bar">
+            <div class="now-playing" id="now-playing">
+                <div style="color: #666;">Selecione uma música</div>
+            </div>
+            <div class="player-controls">
+                <audio id="audio-player" controls></audio>
+            </div>
+            <div class="player-extras">
+                <i class="fas fa-plus-circle btn-player-add" id="btn-player-add" title="Adicionar à Playlist" onclick="abrirModalSelecaoPlaylist()"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const API_URL = 'http://localhost:4000/api';
+        let currentUser = null;
+        let allSongs = [];
+        let userPlaylists = [];
+        let isRegisterMode = false;
+        let favoritos = [];
+        
+        let currentView = 'descobrir';
+        let openPlaylistId = null;
+        let currentPlayingSong = null;
+
+        // --- SISTEMA DE MODAIS ---
+        function fecharModais() {
+            document.querySelectorAll('.modal-overlay').forEach(el => {
+                if(el.id !== 'auth-screen') el.style.display = 'none';
+            });
+        }
+
+        function abrirPrompt(titulo, placeholder, callback) {
+            const modal = document.getElementById('custom-prompt');
+            const input = document.getElementById('prompt-input');
+            const btn = document.getElementById('prompt-confirm-btn');
+            
+            document.getElementById('prompt-title').innerText = titulo;
+            input.placeholder = placeholder;
+            input.value = '';
+            
+            const novoBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(novoBtn, btn);
+            
+            novoBtn.onclick = () => {
+                if(input.value.trim()) { callback(input.value); fecharModais(); }
+            };
+            input.onkeyup = (e) => { if(e.key === 'Enter') novoBtn.click(); };
+            modal.style.display = 'flex';
+            input.focus();
+        }
+
+        function abrirConfirm(titulo, mensagem, textoBotao, callback) {
+            const modal = document.getElementById('custom-confirm');
+            const btn = document.getElementById('confirm-yes-btn');
+            
+            document.getElementById('confirm-title').innerText = titulo;
+            document.getElementById('confirm-msg').innerText = mensagem;
+            btn.innerText = textoBotao;
+            
+            if(textoBotao === 'Sair') btn.style.backgroundColor = '#444';
+            else btn.style.backgroundColor = '';
+
+            const novoBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(novoBtn, btn);
+            
+            novoBtn.onclick = () => { callback(); fecharModais(); };
+            modal.style.display = 'flex';
+        }
+
+        // --- AUTH & FAVORITOS POR USUÁRIO ---
+        function checkSession() {
+            const savedUser = localStorage.getItem('nebula_user');
+            if (savedUser) { 
+                currentUser = JSON.parse(savedUser);
+                iniciarApp(); 
+            }
+        }
+
+        function carregarFavoritos() {
+            const key = `nebula_favoritos_${currentUser.username}`;
+            favoritos = JSON.parse(localStorage.getItem(key)) || [];
+        }
+
+        function salvarFavoritos() {
+            const key = `nebula_favoritos_${currentUser.username}`;
+            localStorage.setItem(key, JSON.stringify(favoritos));
+        }
+
+        // --- EM ALTA (SIMULAÇÃO BASEADA EM LIKES) ---
+        // Para simular, vamos atribuir 'likes' aleatórios fixos para cada música se não tiver
+        function gerarLikesSimulados(songs) {
+            return songs.map(s => {
+                if(!s.likes) s.likes = Math.floor(Math.random() * 5000) + 1000;
+                return s;
+            });
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? "Criar Conta" : "Login Nebula";
+            document.getElementById('auth-user').style.display = isRegisterMode ? "block" : "none";
+            document.querySelector('.auth-btn').innerText = isRegisterMode ? "Cadastrar" : "Entrar";
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            const username = document.getElementById('auth-user').value;
+            const endpoint = isRegisterMode ? '/users/register' : '/users/login';
+            const body = isRegisterMode ? { username, email, password: pass } : { email, password: pass };
+
+            try {
+                const res = await fetch(API_URL + endpoint, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (res.ok) {
+                    currentUser = data; localStorage.setItem('nebula_user', JSON.stringify(data)); iniciarApp();
+                } else alert(data.message);
+            } catch(e) { alert("Erro de conexão"); }
+        }
+        
+        function confirmarLogout() {
+            abrirConfirm("Sair da conta?", "Você terá que fazer login novamente.", "Sair", () => {
+                localStorage.removeItem('nebula_user');
+                location.reload();
+            });
+        }
+
+        // --- APP START ---
+        function iniciarApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'grid';
+            document.getElementById('user-name-display').innerText = currentUser.username;
+            carregarFavoritos();
+            carregarMusicas();
+            carregarPlaylists();
+        }
+
+        async function carregarMusicas() {
+            try {
+                const res = await fetch(API_URL + '/songs');
+                let songs = await res.json();
+                allSongs = gerarLikesSimulados(songs); // Adiciona likes simulados
+                navegar('descobrir');
+            } catch(e) { console.error("Erro musicas:", e); }
+        }
+
+        // --- PLAYLISTS ---
+        async function carregarPlaylists() {
+            const container = document.getElementById('playlist-list-container');
+            try {
+                const res = await fetch(`${API_URL}/playlists?userId=${currentUser._id}`);
+                userPlaylists = await res.json(); 
+
+                container.innerHTML = '';
+                userPlaylists.forEach(pl => {
+                    const div = document.createElement('div');
+                    div.className = 'playlist-row';
+                    div.innerHTML = `<span><i class="fas fa-music" style="margin-right:8px;"></i> ${pl.name}</span> <i class="fas fa-trash btn-delete-pl" onclick="deletarPlaylist(event, '${pl._id}')"></i>`;
+                    div.onclick = (e) => { if(!e.target.classList.contains('btn-delete-pl')) abrirPlaylist(pl._id); };
+                    container.appendChild(div);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function criarPlaylistPrompt() {
+            abrirPrompt("Nova Playlist", "Digite o nome da playlist...", (nome) => {
+                criarPlaylist(nome);
+            });
+        }
+
+        async function criarPlaylist(nome) {
+            await fetch(API_URL + '/playlists', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: nome, user: currentUser._id }) });
+            carregarPlaylists();
+        }
+
+        function deletarPlaylist(e, id) {
+            e.stopPropagation();
+            abrirConfirm("Excluir Playlist?", "Todas as músicas da lista serão removidas.", "Excluir", async () => {
+                await fetch(`${API_URL}/playlists/${id}`, { method: 'DELETE' });
+                carregarPlaylists();
+                if(openPlaylistId === id) navegar('descobrir');
+            });
+        }
+
+        async function abrirPlaylist(id) {
+            currentView = 'playlist';
+            openPlaylistId = id;
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('playlist-header-area').classList.add('active');
+            document.getElementById('page-title').style.display = 'none';
+
+            const res = await fetch(`${API_URL}/playlists/${id}`);
+            const playlist = await res.json();
+            document.getElementById('playlist-title-text').innerText = playlist.name;
+
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = '';
+            if(!playlist.songs || playlist.songs.length === 0) {
+                grid.innerHTML = '<p style="color:#aaa; grid-column: 1/-1; text-align:center;">Playlist vazia. Adicione músicas!</p>';
+                return;
+            }
+            playlist.songs.forEach(musica => {
+                const card = document.createElement('div'); card.className = 'card';
+                card.innerHTML = `<div class="remove-card-btn" onclick="removerMusicaPlaylist(event, '${musica._id}')"><i class="fas fa-trash"></i></div><img src="${musica.coverImageUrl}"><h3>${musica.title}</h3><p>${musica.artist}</p>`;
+                card.onclick = (e) => { if(!e.target.closest('.remove-card-btn')) tocarMusica(musica); };
+                grid.appendChild(card);
+            });
+        }
+
+        function editarNomePlaylistPrompt() {
+            abrirPrompt("Renomear Playlist", "Novo nome...", (novoNome) => {
+                editarNomePlaylist(novoNome);
+            });
+        }
+
+        async function editarNomePlaylist(novoNome) {
+            await fetch(`${API_URL}/playlists/${openPlaylistId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: novoNome }) });
+            carregarPlaylists();
+            document.getElementById('playlist-title-text').innerText = novoNome;
+        }
+
+        function abrirModalMusicas() {
+            const lista = document.getElementById('modal-song-list'); lista.innerHTML = '';
+            allSongs.forEach(musica => {
+                const item = document.createElement('div'); item.className = 'list-item';
+                item.innerHTML = `<span>${musica.title} - ${musica.artist}</span><button class="btn-mini">Add</button>`;
+                item.onclick = () => adicionarMusicaPlaylist(musica._id);
+                lista.appendChild(item);
+            });
+            document.getElementById('modal-add-song').style.display = 'flex';
+        }
+
+        async function adicionarMusicaPlaylist(songId) {
+            await fetch(`${API_URL}/playlists/${openPlaylistId}/songs`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songId }) });
+            abrirPlaylist(openPlaylistId);
+            fecharModais();
+        }
+
+        function removerMusicaPlaylist(e, songId) {
+            e.stopPropagation();
+            abrirConfirm("Remover Música?", "Quer tirar essa música da playlist?", "Remover", async () => {
+                await fetch(`${API_URL}/playlists/${openPlaylistId}/songs/${songId}`, { method: 'DELETE' });
+                abrirPlaylist(openPlaylistId);
+            });
+        }
+
+        function abrirModalSelecaoPlaylist() {
+            if(!currentPlayingSong) return;
+            document.getElementById('song-to-add-name').innerText = currentPlayingSong.title;
+            const lista = document.getElementById('modal-playlist-select-list'); lista.innerHTML = '';
+            if(userPlaylists.length === 0) lista.innerHTML = '<p style="color:#aaa; padding:10px;">Crie uma playlist primeiro.</p>';
+            
+            userPlaylists.forEach(pl => {
+                const item = document.createElement('div'); item.className = 'list-item';
+                item.innerHTML = `<span>${pl.name}</span><button class="btn-mini">Salvar</button>`;
+                item.onclick = () => salvarMusicaTocando(pl._id);
+                lista.appendChild(item);
+            });
+            document.getElementById('modal-select-playlist').style.display = 'flex';
+        }
+
+        async function salvarMusicaTocando(playlistId) {
+            await fetch(`${API_URL}/playlists/${playlistId}/songs`, { 
+                method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ songId: currentPlayingSong._id }) 
+            });
+            fecharModais();
+            const btn = document.getElementById('btn-player-add');
+            btn.style.color = '#0f0'; setTimeout(() => btn.style.color = '', 1000);
+        }
+
+        // --- NAVEGAÇÃO ---
+        function navegar(aba) {
+            currentView = aba; openPlaylistId = null;
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`btn-${aba}`)) document.getElementById(`btn-${aba}`).classList.add('active');
+            document.getElementById('playlist-header-area').classList.remove('active');
+            document.getElementById('page-title').style.display = 'flex';
+
+            const title = document.getElementById('page-title');
+            if(aba === 'descobrir') { 
+                title.innerText = 'Descobrir'; 
+                renderizarGrid(allSongs); 
+            } 
+            else if (aba === 'em-alta') { 
+                title.innerText = 'Em Alta 🔥'; 
+                // Ordena por likes (do maior para o menor)
+                const emAlta = [...allSongs].sort((a, b) => b.likes - a.likes);
+                renderizarGrid(emAlta); 
+            }
+            else if (aba === 'albuns') { 
+                title.innerText = 'Álbuns'; 
+                renderizarAlbuns(); 
+            }
+            else if (aba === 'favoritos') {
+                title.innerText = 'Favoritos ❤️';
+                const favs = allSongs.filter(m => favoritos.includes(m.title));
+                renderizarGrid(favs);
+            }
+        }
+
+        function renderizarGrid(lista) {
+            const grid = document.getElementById('main-grid'); grid.innerHTML = '';
+            lista.forEach(m => {
+                const isFav = favoritos.includes(m.title);
+                const card = document.createElement('div'); card.className = 'card';
+                card.innerHTML = `<div class="fav-card-btn ${isFav?'active':''}" onclick="toggleFav(event, '${m.title}')"><i class="${isFav?'fas':'far'} fa-heart"></i></div><img src="${m.coverImageUrl}"><h3>${m.title}</h3><p>${m.artist}</p>`;
+                card.onclick = (e) => { if(!e.target.closest('.fav-card-btn')) tocarMusica(m); };
+                grid.appendChild(card);
+            });
+        }
+
+        function renderizarAlbuns() {
+            const grid = document.getElementById('main-grid'); grid.innerHTML = '';
+            const albuns = {}; allSongs.forEach(m => { if(!albuns[m.album]) albuns[m.album] = {title:m.album, cover:m.coverImageUrl, artist:m.artist}; });
+            Object.values(albuns).forEach(a => {
+                const card = document.createElement('div'); card.className = 'card';
+                card.innerHTML = `<img src="${a.cover}"><h3>${a.title}</h3><p>${a.artist}</p>`;
+                card.onclick = () => { document.getElementById('page-title').innerText = `Álbum: ${a.title}`; renderizarGrid(allSongs.filter(m => m.album === a.title)); };
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleFav(e, title) {
+            e.stopPropagation();
+            if(favoritos.includes(title)) favoritos = favoritos.filter(f=>f!==title);
+            else favoritos.push(title);
+            
+            salvarFavoritos(); // Salva com a chave do usuário
+            
+            if(currentView === 'favoritos') navegar('favoritos');
+            else { 
+                e.currentTarget.classList.toggle('active'); 
+                const icon = e.currentTarget.querySelector('i');
+                icon.classList.toggle('fas'); 
+                icon.classList.toggle('far'); 
+            }
+        }
+
+        function tocarMusica(m) {
+            currentPlayingSong = m; 
+            document.getElementById('audio-player').src = m.audioUrl;
+            document.getElementById('audio-player').play();
+            document.getElementById('now-playing').innerHTML = `<img src="${m.coverImageUrl}"><div><div style="color:white;font-weight:bold;">${m.title}</div><div style="color:#aaa;font-size:12px;">${m.artist}</div></div>`;
+            const btnAdd = document.getElementById('btn-player-add');
+            btnAdd.classList.add('active');
+        }
+
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            const v = e.target.value.toLowerCase();
+            if(v) { document.getElementById('page-title').innerText = 'Busca'; renderizarGrid(allSongs.filter(m=>m.title.toLowerCase().includes(v)||m.artist.toLowerCase().includes(v))); } 
+            else navegar('descobrir');
+        });
+
+        checkSession();
+    </script>
+</body>
+</html>
