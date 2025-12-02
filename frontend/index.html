@@ -41,24 +41,34 @@
         .modal-box {
             background: rgba(30, 30, 40, 0.95);
             padding: 30px; border-radius: 20px;
-            width: 400px; text-align: center;
+            width: 450px; text-align: center;
             border: var(--glass-border);
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
             display: flex; flex-direction: column; gap: 15px;
             animation: fadeIn 0.3s ease;
         }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .modal-box h3 { margin-bottom: 5px; font-size: 22px; color: white; }
         .modal-box p { color: #aaa; font-size: 14px; margin-bottom: 10px; }
 
-        .modal-box input, .auth-box input {
+        /* Inputs */
+        .modal-box input[type="text"], 
+        .modal-box input[type="password"], 
+        .modal-box input[type="email"], 
+        .auth-box input {
             width: 100%; padding: 12px;
             background: rgba(0,0,0,0.4); border: 1px solid #444;
             color: white; border-radius: 8px; outline: none; font-size: 14px;
         }
         .modal-box input:focus { border-color: var(--accent-color); }
+
+        .file-input-group { text-align: left; margin-bottom: 5px; }
+        .file-input-group label { display: block; color: #aaa; font-size: 12px; margin-bottom: 5px; }
+        .modal-box input[type="file"] {
+            width: 100%; background: rgba(255,255,255,0.05); padding: 8px; 
+            border-radius: 8px; color: #ddd; font-size: 12px; cursor: pointer;
+        }
 
         .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
         
@@ -83,10 +93,12 @@
         }
         .btn-danger:hover { background: red; }
 
+        /* Login Específico */
         .auth-box { width: 350px; text-align: center; } 
         .toggle-link { margin-top: 15px; color: #aaa; cursor: pointer; font-size: 13px; }
         .toggle-link:hover { text-decoration: underline; color: white; }
 
+        /* Listas */
         .scroll-list {
             max-height: 300px; overflow-y: auto; text-align: left;
             border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px;
@@ -115,7 +127,6 @@
         .playlist-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; padding: 0 5px; }
         .btn-create-pl { cursor: pointer; font-size: 16px; color: white; transition: 0.2s; }
         .btn-create-pl:hover { color: var(--accent-color); transform: scale(1.2); }
-        
         .playlist-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; color: #ddd; font-size: 14px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
         .playlist-row:hover { background: rgba(255,255,255,0.05); color: white; }
         .btn-delete-pl { opacity: 0; color: #ff4444; font-size: 12px; transition: 0.2s; }
@@ -139,17 +150,34 @@
 
         .section-title { font-size: 24px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;}
         .songs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
+        
         .card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; position: relative; border: 1px solid transparent; }
         .card:hover { background: rgba(255,255,255,0.1); transform: translateY(-8px); border-color: rgba(255,255,255,0.2); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
         .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .card h3 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
         .card p { font-size: 13px; color: #aaa; }
 
+        /* Botões de Ação no Card */
         .fav-card-btn, .remove-card-btn { position: absolute; top: 25px; right: 25px; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; z-index: 10; cursor: pointer; }
         .fav-card-btn { background: rgba(0,0,0,0.6); color: white; }
         .remove-card-btn { background: rgba(255, 50, 50, 0.8); color: white; right: auto; left: 25px; }
         .card:hover .fav-card-btn, .card:hover .remove-card-btn { opacity: 1; }
         .fav-card-btn.active { opacity: 1; color: var(--accent-color); background: rgba(255,255,255,0.1); }
+
+        /* --- BOTÃO DE DELETAR (PARA O DONO) --- */
+        .delete-owner-btn {
+            position: absolute;
+            top: 25px; left: 25px;
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: #ff0000;
+            color: white; opacity: 0;
+            transition: 0.3s; z-index: 20; cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .card:hover .delete-owner-btn { opacity: 1; }
+        .delete-owner-btn:hover { transform: scale(1.1); background: #cc0000; }
 
         .player-bar { grid-column: 1 / 3; background: rgba(18,18,25,0.95); border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; backdrop-filter: blur(15px); z-index: 100; }
         .now-playing { display: flex; align-items: center; gap: 15px; width: 30%; }
@@ -167,19 +195,17 @@
 </head>
 <body>
 
-    <!-- 1. TELA DE LOGIN -->
     <div id="auth-screen" class="modal-overlay" style="display: flex;">
         <div class="modal-box auth-box">
             <h2 id="auth-title">Login Nebula</h2>
             <input type="email" id="auth-email" placeholder="Email">
             <input type="password" id="auth-pass" placeholder="Senha">
             <input type="text" id="auth-user" placeholder="Nome de Usuário" style="display: none;">
-            <button class="btn-primary" onclick="handleAuth()">Entrar</button>
+            <button class="btn-primary auth-btn" onclick="handleAuth()">Entrar</button>
             <div class="toggle-link" onclick="toggleAuthMode()">Não tem conta? Crie uma agora</div>
         </div>
     </div>
 
-    <!-- 2. MODAL PROMPT -->
     <div id="custom-prompt" class="modal-overlay">
         <div class="modal-box">
             <h3 id="prompt-title">Título</h3>
@@ -191,7 +217,6 @@
         </div>
     </div>
 
-    <!-- 3. MODAL CONFIRM -->
     <div id="custom-confirm" class="modal-overlay">
         <div class="modal-box">
             <h3 id="confirm-title">Tem certeza?</h3>
@@ -203,7 +228,6 @@
         </div>
     </div>
 
-    <!-- 4. MODAL ADICIONAR MÚSICA -->
     <div id="modal-add-song" class="modal-overlay">
         <div class="modal-box">
             <h3>Adicionar à Playlist</h3>
@@ -215,7 +239,6 @@
         </div>
     </div>
 
-    <!-- 5. MODAL SELECIONAR PLAYLIST -->
     <div id="modal-select-playlist" class="modal-overlay">
         <div class="modal-box">
             <h3>Salvar Música</h3>
@@ -227,15 +250,44 @@
         </div>
     </div>
 
-    <!-- APP PRINCIPAL -->
+    <div id="modal-upload-song" class="modal-overlay">
+        <div class="modal-box" style="width: 500px;">
+            <h3>Subir Nova Música</h3>
+            <p>Selecione os arquivos do seu PC.</p>
+            
+            <input type="text" id="new-title" placeholder="Nome da Música (Ex: Blinding Lights)">
+            <input type="text" id="new-artist" placeholder="Artista (Ex: The Weeknd)">
+            <input type="text" id="new-album" placeholder="Álbum (Ex: After Hours)">
+            <input type="text" id="new-genre" placeholder="Gênero (Ex: Pop)">
+            
+            <div class="file-input-group">
+                <label>Arquivo de Áudio (.mp3):</label>
+                <input type="file" id="new-audio-file" accept="audio/*">
+            </div>
+            
+            <div class="file-input-group">
+                <label>Capa (.jpg/.png):</label>
+                <input type="file" id="new-cover-file" accept="image/*">
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="fecharModais()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarMusicaNoBanco()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="app-container">
-        <!-- SIDEBAR -->
         <div class="sidebar">
             <div class="logo"><i class="fas fa-bolt"></i> Nebula</div>
             <div class="menu-item active" id="btn-descobrir" onclick="navegar('descobrir')"><i class="fas fa-compass"></i> Descobrir</div>
             <div class="menu-item" id="btn-em-alta" onclick="navegar('em-alta')"><i class="fas fa-fire"></i> Em Alta</div>
             <div class="menu-item" id="btn-albuns" onclick="navegar('albuns')"><i class="fas fa-record-vinyl"></i> Álbuns</div>
             <div class="menu-item" id="btn-favoritos" onclick="navegar('favoritos')"><i class="fas fa-heart"></i> Favoritos</div>
+            
+            <div class="menu-item" onclick="abrirModalUpload()" style="margin-top: 10px; color: var(--accent-color);">
+                <i class="fas fa-cloud-upload-alt"></i> Subir Música
+            </div>
 
             <div class="playlist-section">
                 <div class="playlist-header">SUAS PLAYLISTS <i class="fas fa-plus-circle btn-create-pl" onclick="criarPlaylistPrompt()"></i></div>
@@ -249,7 +301,6 @@
             </div>
         </div>
 
-        <!-- CONTEÚDO -->
         <div class="main-content">
             <div class="search-box">
                 <i class="fas fa-search" style="color: #a0a0a0;"></i>
@@ -269,7 +320,6 @@
             <div class="songs-grid" id="main-grid"></div>
         </div>
 
-        <!-- PLAYER -->
         <div class="player-bar">
             <div class="now-playing" id="now-playing">
                 <div style="color: #666;">Selecione uma música</div>
@@ -283,7 +333,6 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
         const API_URL = 'http://localhost:4000/api';
         let currentUser = null;
@@ -341,32 +390,84 @@
             modal.style.display = 'flex';
         }
 
-        // --- AUTH & FAVORITOS POR USUÁRIO ---
+        // --- UPLOAD COM ARQUIVOS ---
+        function abrirModalUpload() {
+            ['new-title','new-artist','new-album','new-genre'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('new-audio-file').value = '';
+            document.getElementById('new-cover-file').value = '';
+            document.getElementById('modal-upload-song').style.display = 'flex';
+        }
+
+        // --- FUNÇÃO CORRIGIDA AQUI ---
+        async function salvarMusicaNoBanco() {
+            // VERIFICA SE EXISTE USUÁRIO LOGADO
+            if (!currentUser) {
+                alert("Sessão expirada ou não iniciada. Faça login novamente.");
+                document.getElementById('auth-screen').style.display = 'flex';
+                return;
+            }
+
+            const title = document.getElementById('new-title').value;
+            const audioFile = document.getElementById('new-audio-file').files[0];
+            const coverFile = document.getElementById('new-cover-file').files[0];
+
+            if(!title || !audioFile) return alert("Título e Arquivo de Áudio são obrigatórios!");
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('artist', document.getElementById('new-artist').value || 'Desconhecido');
+            formData.append('album', document.getElementById('new-album').value || 'Single');
+            formData.append('genre', document.getElementById('new-genre').value || 'Geral');
+            
+            formData.append('audioFile', audioFile);
+            if(coverFile) formData.append('coverFile', coverFile);
+
+            // ENVIAR O ID DO USUÁRIO PARA O BACKEND
+            formData.append('userId', currentUser._id);
+
+            try {
+                const res = await fetch(API_URL + '/songs', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if(res.ok) {
+                    alert("Upload realizado com sucesso!");
+                    fecharModais();
+                    carregarMusicas();
+                } else {
+                    const data = await res.json();
+                    alert("Erro do Servidor: " + data.message);
+                }
+            } catch(e) { 
+                console.error("Erro detalhado do upload:", e); // MOSTRA O ERRO NO CONSOLE (F12)
+                alert("Erro de conexão. Verifique se o servidor está rodando."); 
+            }
+        }
+
+        // --- AUTH & FAVORITOS ---
         function checkSession() {
             const savedUser = localStorage.getItem('nebula_user');
             if (savedUser) { 
-                currentUser = JSON.parse(savedUser);
-                iniciarApp(); 
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    iniciarApp(); 
+                } catch(e) {
+                    localStorage.removeItem('nebula_user');
+                }
             }
         }
 
         function carregarFavoritos() {
+            if(!currentUser) return;
             const key = `nebula_favoritos_${currentUser.username}`;
             favoritos = JSON.parse(localStorage.getItem(key)) || [];
         }
 
         function salvarFavoritos() {
+            if(!currentUser) return;
             const key = `nebula_favoritos_${currentUser.username}`;
             localStorage.setItem(key, JSON.stringify(favoritos));
-        }
-
-        // --- EM ALTA (SIMULAÇÃO BASEADA EM LIKES) ---
-        // Para simular, vamos atribuir 'likes' aleatórios fixos para cada música se não tiver
-        function gerarLikesSimulados(songs) {
-            return songs.map(s => {
-                if(!s.likes) s.likes = Math.floor(Math.random() * 5000) + 1000;
-                return s;
-            });
         }
 
         function toggleAuthMode() {
@@ -389,7 +490,7 @@
                 if (res.ok) {
                     currentUser = data; localStorage.setItem('nebula_user', JSON.stringify(data)); iniciarApp();
                 } else alert(data.message);
-            } catch(e) { alert("Erro de conexão"); }
+            } catch(e) { alert("Erro de conexão ao tentar logar."); }
         }
         
         function confirmarLogout() {
@@ -413,13 +514,14 @@
             try {
                 const res = await fetch(API_URL + '/songs');
                 let songs = await res.json();
-                allSongs = gerarLikesSimulados(songs); // Adiciona likes simulados
-                navegar('descobrir');
-            } catch(e) { console.error("Erro musicas:", e); }
+                allSongs = songs; 
+                navegar(currentView);
+            } catch(e) { console.error("Erro ao carregar músicas:", e); }
         }
 
         // --- PLAYLISTS ---
         async function carregarPlaylists() {
+            if(!currentUser) return;
             const container = document.getElementById('playlist-list-container');
             try {
                 const res = await fetch(`${API_URL}/playlists?userId=${currentUser._id}`);
@@ -493,6 +595,37 @@
             document.getElementById('playlist-title-text').innerText = novoNome;
         }
 
+        // --- FUNÇÕES DE DELETAR MÚSICA (GLOBAL/DONO) ---
+        function deletarMusicaGlobal(e, songId) {
+            e.stopPropagation(); 
+            abrirConfirm(
+                "Apagar Música?", 
+                "Essa ação apagará a música permanentemente para TODOS os usuários.", 
+                "Sim, Apagar", 
+                async () => {
+                    try {
+                        const res = await fetch(`${API_URL}/songs/${songId}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: currentUser._id }) // Validação do dono
+                        });
+
+                        const data = await res.json();
+                        if (res.ok) {
+                            alert("Música apagada com sucesso!");
+                            carregarMusicas(); 
+                        } else {
+                            alert("Erro: " + data.message);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Erro ao conectar com o servidor.");
+                    }
+                }
+            );
+        }
+
+        // --- MODAIS DE SELEÇÃO ---
         function abrirModalMusicas() {
             const lista = document.getElementById('modal-song-list'); lista.innerHTML = '';
             allSongs.forEach(musica => {
@@ -543,7 +676,7 @@
             btn.style.color = '#0f0'; setTimeout(() => btn.style.color = '', 1000);
         }
 
-        // --- NAVEGAÇÃO ---
+        // --- NAVEGAÇÃO E RENDERIZAÇÃO ---
         function navegar(aba) {
             currentView = aba; openPlaylistId = null;
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
@@ -558,7 +691,6 @@
             } 
             else if (aba === 'em-alta') { 
                 title.innerText = 'Em Alta 🔥'; 
-                // Ordena por likes (do maior para o menor)
                 const emAlta = [...allSongs].sort((a, b) => b.likes - a.likes);
                 renderizarGrid(emAlta); 
             }
@@ -577,9 +709,35 @@
             const grid = document.getElementById('main-grid'); grid.innerHTML = '';
             lista.forEach(m => {
                 const isFav = favoritos.includes(m.title);
+                
+                // --- LÓGICA DE DONO (CORRIGIDA) ---
+                // Verifica se existe currentUser e se o ID bate com o uploadedBy
+                let isOwner = false;
+                if(currentUser && m.uploadedBy) {
+                    isOwner = (m.uploadedBy === currentUser._id);
+                }
+                
+                // Botão de Deletar (Só aparece se isOwner for true)
+                const deleteBtnHtml = isOwner 
+                    ? `<div class="delete-owner-btn" onclick="deletarMusicaGlobal(event, '${m._id}')" title="Apagar Música"><i class="fas fa-trash-alt"></i></div>` 
+                    : '';
+
                 const card = document.createElement('div'); card.className = 'card';
-                card.innerHTML = `<div class="fav-card-btn ${isFav?'active':''}" onclick="toggleFav(event, '${m.title}')"><i class="${isFav?'fas':'far'} fa-heart"></i></div><img src="${m.coverImageUrl}"><h3>${m.title}</h3><p>${m.artist}</p>`;
-                card.onclick = (e) => { if(!e.target.closest('.fav-card-btn')) tocarMusica(m); };
+                card.innerHTML = `
+                    ${deleteBtnHtml}
+                    <div class="fav-card-btn ${isFav?'active':''}" onclick="toggleFav(event, '${m.title}')">
+                        <i class="${isFav?'fas':'far'} fa-heart"></i>
+                    </div>
+                    <img src="${m.coverImageUrl}">
+                    <h3>${m.title}</h3>
+                    <p>${m.artist}</p>
+                `;
+                
+                card.onclick = (e) => { 
+                    if(!e.target.closest('.fav-card-btn') && !e.target.closest('.delete-owner-btn')) {
+                        tocarMusica(m); 
+                    }
+                };
                 grid.appendChild(card);
             });
         }
@@ -599,15 +757,12 @@
             e.stopPropagation();
             if(favoritos.includes(title)) favoritos = favoritos.filter(f=>f!==title);
             else favoritos.push(title);
-            
-            salvarFavoritos(); // Salva com a chave do usuário
-            
+            salvarFavoritos();
             if(currentView === 'favoritos') navegar('favoritos');
             else { 
                 e.currentTarget.classList.toggle('active'); 
                 const icon = e.currentTarget.querySelector('i');
-                icon.classList.toggle('fas'); 
-                icon.classList.toggle('far'); 
+                icon.classList.toggle('fas'); icon.classList.toggle('far'); 
             }
         }
 
